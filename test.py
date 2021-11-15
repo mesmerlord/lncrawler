@@ -51,7 +51,7 @@ def single_search(query):
     return final_list
 novels_list = {}
 
-for novel in novel_names[:2]:
+for novel in novel_names:
 
     final = single_search(novel)
     data = sorted(final, key=itemgetter(0), reverse=True)
