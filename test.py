@@ -11,7 +11,7 @@ crawlers = []
 
 for x in allCrawlers:
     pathStr = str(x)
-    if r"sources\en" in pathStr and "mtl" not in pathStr:
+    if (r"sources\en" in pathStr or r"sources/en" in pathStr) and "mtl" not in pathStr:
 
         crawlers.append(allCrawlers[x][0])
 
