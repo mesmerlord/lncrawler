@@ -38,7 +38,7 @@ def get_chapters_len(crawler_instance):
                 url = ";".join(crawler_instance.base_url)
             if url in errors.keys():
                 errors[url] += 1
-                if errors[url] > 100 and type(crawler_instance) in crawlers:
+                if errors[url] > 50 and type(crawler_instance) in crawlers:
                     crawlers.remove(type(crawler_instance))
             else:
                 errors[url] = 0
@@ -63,7 +63,7 @@ def get_info(crawler, query, num):
                 url = ";".join(newCrawl.base_url)
             if url in errors.keys():
                 errors[url] += 1
-                if errors[url] > 100 and type(newCrawl) in crawlers:
+                if errors[url] > 50 and type(newCrawl) in crawlers:
                     crawlers.remove(type(newCrawl))
             else:
                 errors[url] = 0
@@ -102,7 +102,7 @@ for num, novel in enumerate(novel_names):
     list_of_results = []
     sorted_crawlers = dict(sorted(crawler_list.items(), key = itemgetter(1), reverse = True))
     final = []
-    items_to_search = 20
+    items_to_search = 50
     crawler_list_pass = list(sorted_crawlers.keys())
 
     for x in range(0, len(sorted_crawlers.keys()), items_to_search):
