@@ -5,7 +5,7 @@ import pandas as pd
 from operator import itemgetter
 
 allCrawlers = load_sources()
-blocked_sources = ["anythingnovel","automtl", ]
+blocked_sources = ["anythingnovel","automtl" ]
 
 novel_names = pd.read_csv("newfile3.csv")['Book Name'].values.tolist()
 crawlers = []
@@ -21,7 +21,8 @@ def get_chapters_len(crawler_instance):
         crawler_instance.read_novel_info()
         return [len(crawler_instance.chapters), crawler_instance.novel_url]
     except Exception as e:
-        print(crawler_instance.novel_url, e,"\n")
+        # print(crawler_instance.novel_url, e,"\n")
+        print(crawler_instance, crawler_instance.base_url)
 
 def get_info(crawler, query):
     newCrawl = crawler()
@@ -33,6 +34,7 @@ def get_info(crawler, query):
             if novel['title'] == query:
                 newCrawl.novel_url = novel['url']
                 results =  get_chapters_len(newCrawl)
+        newCrawl.destroy()
         return results
     except Exception as e:
         # print("failed",newCrawl)
@@ -41,15 +43,15 @@ def get_info(crawler, query):
 
 def single_search(query):
     final_list = []
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        results = executor.map(get_info, crawlers[:10], [query for x in range(len(crawlers))][:10])
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        results = executor.map(get_info, crawlers, [query for x in range(len(crawlers))])
         for result in results:
             if result:
                 final_list.append(result)
     return final_list
 novels_list = {}
 
-for novel in novel_names[:5]:
+for novel in novel_names:
 
     final = single_search(novel)
     if final:
