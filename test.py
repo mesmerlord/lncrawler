@@ -54,9 +54,9 @@ def get_info(crawler, query, num):
             if novel['title'] == query:
                 newCrawl.novel_url = novel['url']
                 results =  get_chapters_len(newCrawl)
-        newCrawl.destroy()
-        return results
-    except Exception as e:
+    except Exception as novel_search_error:
+        print("Novel search failed", novel_search_error)
+
         try:
             url = newCrawl.base_url
             if type(newCrawl.base_url) is list:
@@ -67,10 +67,16 @@ def get_info(crawler, query, num):
                     crawlers.remove(type(newCrawl))
             else:
                 errors[url] = 0
+
                 
-        except:
+        except Exception as e:
+            print("Error logging failed", e)
+    finally:
+        newCrawl.destroy()
+        if results:
+            return results
+        else:
             return None
-        return None
 
 def single_search(query, crawler_instances):
     final_list = []
@@ -84,8 +90,15 @@ def single_search(query, crawler_instances):
     return final_list
 novels_list = {}
 
+with open('data.json', 'r', encoding='utf-8') as json_file:
+    novels_list = json.load(json_file)
+with open('errors.json', 'r', encoding='utf-8') as json_file_1:  
+    errors = json.load(json_file_1)
 
-for num, novel in enumerate(novel_names[:5]):
+novel_names = [x for x in novel_names if x not in novels_list.keys()]
+for num, novel in enumerate(novel_names):
+
+    
     list_of_results = []
     sorted_crawlers = dict(sorted(crawler_list.items(), key = itemgetter(1), reverse = True))
     final = []
@@ -100,18 +113,14 @@ for num, novel in enumerate(novel_names[:5]):
         if semi_final:
             final = final + semi_final
         print(len(final), novel)
-        if len(final) >= 10:
+        if len(final) >= 5:
             break
 
     if final:
         data = sorted(final, key=itemgetter(0), reverse=True)
         novels_list[novel] = data
         print(f"{num} --  Finished novel : {novel} ")
-
-# df1 = pd.DataFrame.from_dict(novels_list)
-# df1.to_csv('test.csv')
-
-with open('data.json', 'w', encoding='utf-8') as f:
-    json.dump(novels_list, f, ensure_ascii=False, indent=2)
-with open('errors.json', 'w', encoding='utf-8') as error_file:
-    json.dump(errors, error_file, ensure_ascii=False, indent=2)
+    with open('data.json', 'w', encoding='utf-8') as f:
+        json.dump(novels_list, f, ensure_ascii=False, indent=2)
+    with open('errors.json', 'w', encoding='utf-8') as error_file:  
+        json.dump(errors, error_file, ensure_ascii=False, indent=2)
