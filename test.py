@@ -9,6 +9,7 @@ blocked_sources = ["anythingnovel","automtl" ]
 
 novel_names = pd.read_csv("newfile3.csv")['Book Name'].values.tolist()
 crawlers = []
+errors = {}
 
 for x in allCrawlers:
     pathStr = str(x)
@@ -22,7 +23,10 @@ def get_chapters_len(crawler_instance):
         return [len(crawler_instance.chapters), crawler_instance.novel_url]
     except Exception as e:
         # print(crawler_instance.novel_url, e,"\n")
-        print(crawler_instance, crawler_instance.base_url)
+        if crawler_instance.base_url in errors.keys():
+            errors[crawler_instance.base_url] += 1
+        else:
+            errors[crawler_instance.base_url] = 0
 
 def get_info(crawler, query, num):
     newCrawl = crawler()
@@ -35,7 +39,6 @@ def get_info(crawler, query, num):
                 newCrawl.novel_url = novel['url']
                 results =  get_chapters_len(newCrawl)
         newCrawl.destroy()
-        print(f"{num} --  Finished novel : {query} ")
         return results
     except Exception as e:
         # print("failed",newCrawl)
@@ -53,12 +56,13 @@ def single_search(query):
     return final_list
 novels_list = {}
 
-for novel in novel_names:
+for num, novel in enumerate(novel_names):
 
     final = single_search(novel)
     if final:
         data = sorted(final, key=itemgetter(0), reverse=True)
         novels_list[novel] = data
+        print(f"{num} --  Finished novel : {novel} ")
 
     # for num, row in enumerate(data):
     #     novels_list[f"Source {num}"] = row[1]
@@ -69,3 +73,5 @@ for novel in novel_names:
 
 with open('data.json', 'w', encoding='utf-8') as f:
     json.dump(novels_list, f, ensure_ascii=False, indent=2)
+with open('errors.json', 'w', encoding='utf-8') as error_file:
+    json.dump(errors, error_file, ensure_ascii=False, indent=2)
