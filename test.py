@@ -69,9 +69,10 @@ def get_info(crawler, query, num):
 
 def single_search(query, crawler_instances):
     final_list = []
-    with ThreadPoolExecutor(max_workers=50) as executor:
-        results = executor.map(get_info, crawler_instances, [query for x in range(len(crawler_instances))],
-            [x for x in range(len(crawlers))])
+    num_of_crawlers = len(crawler_instances)
+    with ThreadPoolExecutor(max_workers=num_of_crawlers) as executor:
+        results = executor.map(get_info, crawler_instances, [query for x in range(num_of_crawlers)],
+            [x for x in range(num_of_crawlers)])
         for result in results:
             if result:
                 final_list.append(result)
@@ -90,7 +91,8 @@ for num, novel in enumerate(novel_names):
         semi_final = single_search(novel, crawler_list_slice)
         if semi_final:
             final = final + semi_final
-        if len(final) > 20:
+        print(len(final), novel)
+        if len(final) >= 5:
             break
 
     if final:
