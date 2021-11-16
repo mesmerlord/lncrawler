@@ -20,6 +20,7 @@ for x in allCrawlers:
 def get_chapters_len(crawler_instance):
     try:
         crawler_instance.read_novel_info()
+        print(crawler_instance.novel_url)
         return [len(crawler_instance.chapters), crawler_instance.novel_url]
     except Exception as e:
         # print(crawler_instance.novel_url, e,"\n")
