@@ -24,7 +24,7 @@ def get_chapters_len(crawler_instance):
         # print(crawler_instance.novel_url, e,"\n")
         print(crawler_instance, crawler_instance.base_url)
 
-def get_info(crawler, query):
+def get_info(crawler, query, num):
     newCrawl = crawler()
     novel_info = {}
     results = []
@@ -35,6 +35,7 @@ def get_info(crawler, query):
                 newCrawl.novel_url = novel['url']
                 results =  get_chapters_len(newCrawl)
         newCrawl.destroy()
+        print(f"{num} --  Finished novel : {query} ")
         return results
     except Exception as e:
         # print("failed",newCrawl)
@@ -44,7 +45,8 @@ def get_info(crawler, query):
 def single_search(query):
     final_list = []
     with ThreadPoolExecutor(max_workers=50) as executor:
-        results = executor.map(get_info, crawlers, [query for x in range(len(crawlers))])
+        results = executor.map(get_info, crawlers, [query for x in range(len(crawlers))],
+            [x for x in range(len(crawlers))])
         for result in results:
             if result:
                 final_list.append(result)
