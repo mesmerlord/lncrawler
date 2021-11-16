@@ -5,6 +5,7 @@ import pandas as pd
 from operator import itemgetter
 
 allCrawlers = load_sources()
+blocked_sources = ["anythingnovel","automtl", ]
 
 novel_names = pd.read_csv("newfile3.csv")['Book Name'].values.tolist()
 crawlers = []
@@ -33,8 +34,6 @@ def get_info(crawler, query):
                 print(novel)
                 newCrawl.novel_url = novel['url']
                 results =  get_chapters_len(newCrawl)
-
-                print("passed", results)
         return results
     except Exception as e:
         # print("failed",newCrawl)
@@ -44,19 +43,19 @@ def get_info(crawler, query):
 def single_search(query):
     final_list = []
     with ThreadPoolExecutor(max_workers=20) as executor:
-        results = executor.map(get_info, crawlers, [query for x in range(len(crawlers))])
+        results = executor.map(get_info, crawlers[:10], [query for x in range(len(crawlers))][:10])
         for result in results:
             if result:
                 final_list.append(result)
     return final_list
 novels_list = {}
 
-for novel in novel_names:
+for novel in novel_names[:5]:
 
     final = single_search(novel)
-    data = sorted(final, key=itemgetter(0), reverse=True)
-
-    novels_list[novel] = data
+    if final:
+        data = sorted(final, key=itemgetter(0), reverse=True)
+        novels_list[novel] = data
 
     # for num, row in enumerate(data):
     #     novels_list[f"Source {num}"] = row[1]
@@ -66,4 +65,4 @@ for novel in novel_names:
 # df1.to_csv('test.csv')
 
 with open('data.json', 'w', encoding='utf-8') as f:
-    json.dump(novels_list, f, ensure_ascii=False, indent=4)
+    json.dump(novels_list, f, ensure_ascii=False, indent=2)
