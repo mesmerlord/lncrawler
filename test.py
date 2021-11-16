@@ -31,7 +31,6 @@ def get_info(crawler, query):
         novel_info = newCrawl.search_novel(query=query)
         for novel in novel_info:
             if novel['title'] == query:
-                print(novel)
                 newCrawl.novel_url = novel['url']
                 results =  get_chapters_len(newCrawl)
         return results
