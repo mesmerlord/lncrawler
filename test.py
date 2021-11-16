@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 from operator import itemgetter
 import random
-import traceback
 
 allCrawlers = load_sources()
 blocked_sources = ["anythingnovel","automtl" ]
@@ -18,6 +17,10 @@ for x in allCrawlers:
     if (r"sources\en" in pathStr or r"sources/en" in pathStr) and "mtl" not in pathStr:
 
         crawlers.append(allCrawlers[x][0])
+crawler_list = {}
+
+for x in crawlers:
+    crawler_list[x] = 0
 
 def get_chapters_len(crawler_instance):
     try:
@@ -25,6 +28,8 @@ def get_chapters_len(crawler_instance):
         if len(crawler_instance.chapters) == 0:
             return
         elif len(crawler_instance.chapters) > 0:
+
+            crawler_list[type(crawler_instance)] += 1
             return [len(crawler_instance.chapters), crawler_instance.novel_url]
     except Exception as e:
         url = crawler_instance.base_url
@@ -79,20 +84,23 @@ def single_search(query, crawler_instances):
     return final_list
 novels_list = {}
 
-for num, novel in enumerate(novel_names):
-    list_of_results = []
-    random.shuffle(crawlers)
-    crawler_list = crawlers
 
+for num, novel in enumerate(novel_names[:5]):
+    list_of_results = []
+    sorted_crawlers = dict(sorted(crawler_list.items(), key = itemgetter(1), reverse = True))
     final = []
-    for x in range(0, len(crawler_list), 40):
-        crawler_list_slice = crawler_list[x : x+40]
+    items_to_search = 20
+    crawler_list_pass = list(sorted_crawlers.keys())
+
+    for x in range(0, len(sorted_crawlers.keys()), items_to_search):
+        crawler_list_slice = crawler_list_pass[x : x+items_to_search]
+        random.shuffle(crawler_list_slice)
 
         semi_final = single_search(novel, crawler_list_slice)
         if semi_final:
             final = final + semi_final
         print(len(final), novel)
-        if len(final) >= 5:
+        if len(final) >= 10:
             break
 
     if final:
