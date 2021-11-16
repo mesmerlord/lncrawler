@@ -3,6 +3,8 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 from operator import itemgetter
+import random
+import traceback
 
 allCrawlers = load_sources()
 blocked_sources = ["anythingnovel","automtl" ]
@@ -20,15 +22,23 @@ for x in allCrawlers:
 def get_chapters_len(crawler_instance):
     try:
         crawler_instance.read_novel_info()
-        print(crawler_instance.novel_url)
-        return [len(crawler_instance.chapters), crawler_instance.novel_url]
+        if len(crawler_instance.chapters) == 0:
+            return
+        elif len(crawler_instance.chapters) > 0:
+            return [len(crawler_instance.chapters), crawler_instance.novel_url]
     except Exception as e:
-        # print(crawler_instance.novel_url, e,"\n")
-        if crawler_instance.base_url in errors.keys():
-            errors[crawler_instance.base_url] += 1
-        else:
-            errors[crawler_instance.base_url] = 0
-
+        url = crawler_instance.base_url
+        try:
+            if type(crawler_instance.base_url) is list:
+                url = ";".join(crawler_instance.base_url)
+            if url in errors.keys():
+                errors[url] += 1
+                if errors[url] > 100 and type(crawler_instance) in crawlers:
+                    crawlers.remove(type(crawler_instance))
+            else:
+                errors[url] = 0
+        except:
+            return None
 def get_info(crawler, query, num):
     newCrawl = crawler()
     novel_info = {}
@@ -42,14 +52,25 @@ def get_info(crawler, query, num):
         newCrawl.destroy()
         return results
     except Exception as e:
-        # print("failed",newCrawl)
-        # print(e)
+        try:
+            url = newCrawl.base_url
+            if type(newCrawl.base_url) is list:
+                url = ";".join(newCrawl.base_url)
+            if url in errors.keys():
+                errors[url] += 1
+                if errors[url] > 100 and type(newCrawl) in crawlers:
+                    crawlers.remove(type(newCrawl))
+            else:
+                errors[url] = 0
+                
+        except:
+            return None
         return None
 
-def single_search(query):
+def single_search(query, crawler_instances):
     final_list = []
     with ThreadPoolExecutor(max_workers=50) as executor:
-        results = executor.map(get_info, crawlers, [query for x in range(len(crawlers))],
+        results = executor.map(get_info, crawler_instances, [query for x in range(len(crawler_instances))],
             [x for x in range(len(crawlers))])
         for result in results:
             if result:
@@ -58,16 +79,24 @@ def single_search(query):
 novels_list = {}
 
 for num, novel in enumerate(novel_names):
+    list_of_results = []
+    random.shuffle(crawlers)
+    crawler_list = crawlers
 
-    final = single_search(novel)
+    final = []
+    for x in range(0, len(crawler_list), 40):
+        crawler_list_slice = crawler_list[x : x+40]
+
+        semi_final = single_search(novel, crawler_list_slice)
+        if semi_final:
+            final = final + semi_final
+        if len(final) > 20:
+            break
+
     if final:
         data = sorted(final, key=itemgetter(0), reverse=True)
         novels_list[novel] = data
         print(f"{num} --  Finished novel : {novel} ")
-
-    # for num, row in enumerate(data):
-    #     novels_list[f"Source {num}"] = row[1]
-    #     novels_list[f"Chapters {num}"] = row[0]
 
 # df1 = pd.DataFrame.from_dict(novels_list)
 # df1.to_csv('test.csv')
