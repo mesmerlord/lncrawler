@@ -104,10 +104,10 @@ with open('not_found.json', 'r', encoding='utf-8') as json_file_2:
     not_found = json.load(json_file_2)
 
 novel_names = [x for x in novel_names if x not in novels_list.keys()]
-for num, novel in enumerate(novel_names[:2]):
+for num, novel in enumerate(novel_names):
     list_of_results = []
     final = []
-    items_to_search = 20
+    items_to_search = 50
     random.shuffle(crawlers)
 
     for x in range(0, len(crawlers), items_to_search):
