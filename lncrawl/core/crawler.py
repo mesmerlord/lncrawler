@@ -110,9 +110,10 @@ class Crawler(ABC):
         pass
     # end def
 
+    @abstractmethod
     def search_novel(self, query) -> List[Dict[str, str]]:
         '''Gets a list of results matching the given query'''
-        return []
+        raise NotImplementedError()
     # end def
 
     @abstractmethod
@@ -225,14 +226,13 @@ class Crawler(ABC):
         kargs = kargs or dict()
         #kargs.setdefault('verify', False)
         #kargs.setdefault('allow_redirects', True)
-        kargs.setdefault('timeout', 2)  # in seconds
+        kargs.setdefault('timeout', 3)  # in seconds
         headers = kargs.setdefault('headers', {})
         headers = {k.lower(): v for k, v in headers.items()}
         #headers.setdefault('user-agent', random.choice(user_agents))
 
         with get_domain_semaphore(url):
-            with no_ssl_verification():
-                response = self.scraper.get(url, **kargs)
+            response = self.scraper.get(url, **kargs)
 
         self.last_visited_url = url.strip('/')
         return self.__process_response(response)
