@@ -9,6 +9,8 @@ import urllib3
 from colorama import Fore
 import concurrent.futures
 import traceback
+import requests
+import ssl
 
 urllib3.disable_warnings()
 
@@ -22,7 +24,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 allCrawlers = load_sources()
-blocked_sources = ["anythingnovel","automtl" ]
+blocked_sources = ["anythingnovel","automtl" , 'qidian', "writerupdates", "dsrealm", "divinedaolib",
+    "novelspread", "oppa", "babel", "instadoses", "rebirthonline", "fourscan", "novelmao", 
+    "readlightnovel", "gravitytales", "novelraw", "lightnovelworld"]
 
 novel_names = pd.read_csv("newfile3.csv")['Book Name'].values.tolist()
 crawlers = []
@@ -31,7 +35,12 @@ not_found = []
 
 for x in allCrawlers:
     pathStr = str(x)
-    if (r"sources\en" in pathStr or r"sources/en" in pathStr) and "mtl" not in pathStr:
+    ignore = False
+    for blocked in blocked_sources:
+        if blocked in pathStr:
+            ignore = True
+            break
+    if (r"sources\en" in pathStr or r"sources/en" in pathStr) and not ignore:
         try:
             crawl = allCrawlers[x][0]
             crawlers.append(crawl)
@@ -43,8 +52,6 @@ def get_chapters_len(crawler_instance):
     if len(crawler_instance.chapters) == 0:
         return
     elif len(crawler_instance.chapters) > 0:
-
-        crawler_list[crawler_instance] += 1
         return [len(crawler_instance.chapters), crawler_instance.novel_url]
         
 def get_info(crawler, query):
@@ -75,11 +82,18 @@ def single_search(query, crawler_instances):
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
             try:
-                result = future.result()
+                result = future.result(timeout = 3)
                 if result:
                     final_list.append(result)
+            except (TypeError, requests.exceptions.SSLError,ssl.SSLEOFError, 
+                urllib3.exceptions.MaxRetryError, requests.exceptions.ConnectionError,
+                urllib3.exceptions.NewConnectionError, requests.exceptions.MissingSchema,
+                AttributeError,requests.exceptions.ReadTimeout ):
+                pass
+            
             except Exception as exc:
-                print('%r generated an exception: %s' % (url, exc))
+                print(traceback.format_exc())
+                # print('%r generated an exception: %s' % (url, exc))
 
     return final_list
 novels_list = {}
@@ -90,7 +104,7 @@ with open('not_found.json', 'r', encoding='utf-8') as json_file_2:
     not_found = json.load(json_file_2)
 
 novel_names = [x for x in novel_names if x not in novels_list.keys()]
-for num, novel in enumerate(novel_names):
+for num, novel in enumerate(novel_names[:2]):
     list_of_results = []
     final = []
     items_to_search = 20
